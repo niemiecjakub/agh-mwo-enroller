@@ -1,6 +1,7 @@
 package com.company.enroller.persistence;
 
 import java.util.Collection;
+import java.util.Comparator;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -18,10 +19,25 @@ public class ParticipantService {
 		connector = DatabaseConnector.getInstance();
 	}
 
-	public Collection<Participant> getAll() {
+	public Collection<Participant> getAll(String sortBy, String sortOrder, String key) {
+		//Sortowac w bazie - za pomoca hql - a nie na serverze juz,
 		String hql = "FROM Participant";
 		Query query = connector.getSession().createQuery(hql);
-		return query.list();
+		Collection<Participant> participants = query.list();
+
+		if (!key.isEmpty()) {
+			participants = participants.stream().filter(p -> p.getLogin().contains(key)).toList();
+		}
+
+		if (sortOrder.equals("ASC")) {
+			participants = participants.stream().sorted(Comparator.comparing(Participant::getLogin)).toList();
+		}
+
+		if (sortOrder.equals("DESC")) {
+			participants = participants.stream().sorted(Comparator.comparing(Participant::getLogin).reversed()).toList();
+		}
+
+		return participants;
 	}
 
 	public Participant getByLogin(String login) {
